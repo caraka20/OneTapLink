@@ -1,5 +1,18 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
+// ⏱️ helper untuk timeout
+async function fetchWithTimeout(resource: RequestInfo, options: RequestInit & { timeout?: number } = {}) {
+  const { timeout = 10000, ...rest } = options; // default 10 detik
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    return await fetch(resource, { ...rest, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
@@ -14,15 +27,20 @@ export async function apiFetch<T>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const res = await fetchWithTimeout(`${API_URL}${path}`, { ...options, headers });
 
   if (!res.ok) {
-    let error = "Unknown error";
+    let error = `HTTP ${res.status}`;
     try {
       const data = await res.json();
       error = (data as { error?: string }).error || res.statusText;
     } catch {
-      // kalau gagal parse JSON, fallback ke statusText
+      try {
+        const text = await res.text();
+        if (text) error = text;
+      } catch {
+        // fallback ke statusText
+      }
     }
     throw new Error(error);
   }
@@ -32,34 +50,27 @@ export async function apiFetch<T>(
     return {} as T;
   }
 
-  return res.json() as Promise<T>;
+  // coba parse JSON, kalau gagal fallback ke teks
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return (await res.text()) as unknown as T;
+  }
 }
 
-// 🔧 Helper method supaya lebih enak dipakai
+// 🔧 Helper supaya lebih enak dipakai
 export const api = {
   get: <T>(path: string, token?: string) =>
     apiFetch<T>(path, { method: "GET" }, token),
 
   post: <T>(path: string, body: unknown, token?: string) =>
-    apiFetch<T>(
-      path,
-      { method: "POST", body: JSON.stringify(body) },
-      token
-    ),
+    apiFetch<T>(path, { method: "POST", body: JSON.stringify(body) }, token),
 
   put: <T>(path: string, body: unknown, token?: string) =>
-    apiFetch<T>(
-      path,
-      { method: "PUT", body: JSON.stringify(body) },
-      token
-    ),
+    apiFetch<T>(path, { method: "PUT", body: JSON.stringify(body) }, token),
 
   patch: <T>(path: string, body: unknown, token?: string) =>
-    apiFetch<T>(
-      path,
-      { method: "PATCH", body: JSON.stringify(body) },
-      token
-    ),
+    apiFetch<T>(path, { method: "PATCH", body: JSON.stringify(body) }, token),
 
   delete: <T>(path: string, token?: string) =>
     apiFetch<T>(path, { method: "DELETE" }, token),

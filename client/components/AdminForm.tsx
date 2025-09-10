@@ -6,33 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { showError, showSuccess } from "@/lib/alert";
 
 type Props = {
   onCreated: () => void;
 };
 
-type Group = {
-  id: number;
-  nama: string;
-  link: string;
-  jenis: string;
-  status: string;
-};
-
 export default function AdminForm({ onCreated }: Props) {
-  const [nama, setNama] = useState("");
   const [link, setLink] = useState("");
+  const [nama, setNama] = useState("");
   const [jenis, setJenis] = useState("");
-  const [customJenis, setCustomJenis] = useState("");
   const [jenisOptions, setJenisOptions] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchJenis = async () => {
       try {
         const token = localStorage.getItem("token")!;
-        const res = await apiFetch<Group[]>("/groups", {}, token);
-
+        const res = await apiFetch<{ jenis: string }[]>("/groups", {}, token);
         const uniqueJenis = Array.from(new Set(res.map((g) => g.jenis)));
         setJenisOptions(uniqueJenis);
       } catch {
@@ -50,7 +39,7 @@ export default function AdminForm({ onCreated }: Props) {
       );
       setNama(res.title);
     } catch {
-      console.warn("Gagal ambil judul grup, isi manual");
+      console.warn("Gagal ambil nama grup otomatis, isi manual.");
     }
   };
 
@@ -61,29 +50,23 @@ export default function AdminForm({ onCreated }: Props) {
         "/groups",
         {
           method: "POST",
-          body: JSON.stringify({
-            nama,
-            link,
-            jenis: jenis === "Lainnya" ? customJenis : jenis,
-          }),
+          body: JSON.stringify({ link, nama, jenis }),
         },
         token
       );
-      setNama("");
       setLink("");
+      setNama("");
       setJenis("");
-      setCustomJenis("");
-      showSuccess("Grup berhasil ditambahkan");
       onCreated();
-    } catch (err: unknown) {
-      if (err instanceof Error) showError(err.message);
-      else showError("Gagal menambahkan grup");
+    } catch (err) {
+      if (err instanceof Error) alert(err.message);
     }
   };
 
   return (
     <Card>
       <CardContent className="space-y-3 p-4">
+        {/* Link Grup WA */}
         <Input
           placeholder="Link Grup WhatsApp"
           value={link}
@@ -91,12 +74,14 @@ export default function AdminForm({ onCreated }: Props) {
           onBlur={handleLinkBlur}
         />
 
+        {/* Nama Grup */}
         <Input
           placeholder="Nama Grup"
           value={nama}
           onChange={(e) => setNama(e.target.value)}
         />
 
+        {/* Jenis grup pakai select */}
         <Select value={jenis} onValueChange={setJenis}>
           <SelectTrigger>
             <SelectValue placeholder="Pilih Jenis Grup" />
@@ -110,14 +95,6 @@ export default function AdminForm({ onCreated }: Props) {
             <SelectItem value="Lainnya">Lainnya</SelectItem>
           </SelectContent>
         </Select>
-
-        {jenis === "Lainnya" && (
-          <Input
-            placeholder="Tulis jenis grup"
-            value={customJenis}
-            onChange={(e) => setCustomJenis(e.target.value)}
-          />
-        )}
 
         <Button onClick={handleSubmit} className="w-full">
           Tambah Grup

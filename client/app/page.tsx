@@ -1,4 +1,11 @@
 import GroupList from "../components/GroupList";
+import { baseMetadata } from "@/lib/metadata";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  ...baseMetadata,
+  title: "Grup WhatsApp Mahasiswa UT 2025",
+};
 
 export default function Home() {
   return (
@@ -15,7 +22,7 @@ export default function Home() {
           🎓 One Tap Link UT
         </h1>
         <p className="mt-4 text-lg text-gray-600 max-w-xl mx-auto">
-          Semua grup WhatsApp mahasiswa UT dalam satu tempat.
+          Semua grup WhatsApp Mahasiswa UT dalam satu tempat.
           Cari, temukan, dan bergabung dengan mudah.
         </p>
       </section>
