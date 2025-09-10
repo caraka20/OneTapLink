@@ -1,8 +1,7 @@
-// EditGroupModal.tsx
 "use client";
 
 import { useState, useEffect } from "react";
-import { api } from "@/lib/api";
+import { api, apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,9 +31,26 @@ type Props = {
 export default function EditGroupModal({ mode, group, onClose, onSaved }: Props) {
   const [link, setLink] = useState(group?.link || "");
   const [nama, setNama] = useState(group?.nama || "");
-  const [jenis, setJenis] = useState(group?.jenis || "Jurusan");
+  const [jenis, setJenis] = useState(group?.jenis || "");
+  const [customJenis, setCustomJenis] = useState("");
   const [status, setStatus] = useState<Group["status"]>(group?.status || "AKTIF");
   const [loading, setLoading] = useState(false);
+  const [jenisOptions, setJenisOptions] = useState<string[]>([]);
+
+  // 🚀 Ambil jenis unik dari DB
+  useEffect(() => {
+    const fetchJenis = async () => {
+      try {
+        const token = localStorage.getItem("token")!;
+        const res = await apiFetch<Group[]>("/groups", {}, token);
+        const uniqueJenis = Array.from(new Set(res.map((g) => g.jenis).filter(Boolean)));
+        setJenisOptions(uniqueJenis);
+      } catch (err) {
+        console.error("❌ gagal fetch jenis:", err);
+      }
+    };
+    fetchJenis();
+  }, []);
 
   // 🚀 Auto-generate nama dari link
   useEffect(() => {
@@ -56,23 +72,21 @@ export default function EditGroupModal({ mode, group, onClose, onSaved }: Props)
     setLoading(true);
     try {
       const token = localStorage.getItem("token")!;
+      const finalJenis = jenis === "Lainnya" ? customJenis : jenis;
+
       if (mode === "create") {
-        await api.post("/groups", { nama, link, jenis, status }, token);
+        await api.post("/groups", { nama, link, jenis: finalJenis, status }, token);
         showSuccess("✅ Grup berhasil ditambahkan");
       } else {
-        await api.put(`/groups/${group?.id}`, { nama, link, jenis, status }, token);
+        await api.put(`/groups/${group?.id}`, { nama, link, jenis: finalJenis, status }, token);
         showSuccess("✅ Grup berhasil diupdate");
       }
       onSaved();
       onClose();
-   } catch (err: unknown) {
-  if (err instanceof Error) {
-    showError(err.message);
-  } else {
-    showError("Terjadi kesalahan");
-  }
-}
- finally {
+    } catch (err: unknown) {
+      if (err instanceof Error) showError(err.message);
+      else showError("Terjadi kesalahan");
+    } finally {
       setLoading(false);
     }
   };
@@ -92,23 +106,39 @@ export default function EditGroupModal({ mode, group, onClose, onSaved }: Props)
             onChange={(e) => setLink(e.target.value)}
           />
 
-          {/* Input Nama (auto terisi kalau create) */}
+          {/* Input Nama */}
           <Input
             placeholder="Nama Grup"
             value={nama}
             onChange={(e) => setNama(e.target.value)}
           />
 
-          {/* Jenis Grup */}
-          <select
+            {/* Jenis Grup */}
+            <select
             className="w-full border rounded p-2 text-sm"
             value={jenis}
             onChange={(e) => setJenis(e.target.value)}
-          >
-            <option value="Jurusan">Jurusan</option>
-            <option value="UPBJJ">UPBJJ</option>
+            >
+            <option disabled hidden value="">
+                Pilih Jenis Grup
+            </option>
+            {jenisOptions.map((j) => (
+                <option key={j} value={j}>
+                {j}
+                </option>
+            ))}
             <option value="Lainnya">Lainnya</option>
-          </select>
+            </select>
+
+            {/* Input tambahan kalau pilih Lainnya */}
+            {jenis === "Lainnya" && (
+            <Input
+                placeholder="Isi jenis grup lain"
+                value={customJenis}
+                onChange={(e) => setCustomJenis(e.target.value)}
+            />
+            )}
+
 
           {/* Status */}
           <select
