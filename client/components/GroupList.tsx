@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { apiFetch } from "../lib/api";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { ExternalLink } from "lucide-react";
 
 type Group = {
   id: number;
@@ -51,74 +51,75 @@ export default function GroupList() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 py-8 px-4 sm:px-6 lg:px-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 tracking-tight drop-shadow-sm">
+      <div className="text-center py-6">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-blue-700 tracking-tight drop-shadow-sm">
           📚 Grup Mahasiswa UT
         </h1>
-        <p className="text-gray-600 text-sm md:text-base mt-2">
+        <p className="text-gray-600 text-sm md:text-base mt-1">
           Temukan grup WhatsApp berdasarkan jurusan, daerah, atau komunitas.
         </p>
       </div>
 
-      {/* Filter Buttons → grid 3 kolom */}
-      <div className="bg-white shadow rounded-lg p-3 mb-8">
-        <div className="grid grid-cols-3 gap-2">
+      {/* Filter Tabs → 2 kolom, full width */}
+      <div className="bg-white shadow-md rounded-2xl mx-2 sm:mx-4 mb-6">
+        <div className="grid grid-cols-2 gap-3 p-3">
           {jenisTabs.map((j) => (
             <button
               key={j}
               onClick={() => setActiveJenis(j)}
               className={cn(
-                "relative w-full px-2 py-2 rounded-md font-medium text-xs sm:text-sm transition-all",
-                "flex items-center justify-center",
+                "w-full px-3 py-3 rounded-xl font-semibold text-sm transition-all",
                 activeJenis === j
-                  ? "bg-indigo-600 text-white shadow"
+                  ? "bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               )}
             >
-              {j}
-              {/* Badge jumlah */}
-              <span
-                className={cn(
-                  "ml-2 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-bold",
-                  activeJenis === j
-                    ? "bg-white/20 text-white"
-                    : "bg-gray-300 text-gray-800"
-                )}
-              >
-                {countByJenis(j)}
-              </span>
+              <div className="flex items-center justify-between">
+                <span>{j}</span>
+                <span
+                  className={cn(
+                    "ml-2 px-2 py-0.5 rounded-full text-xs font-bold",
+                    activeJenis === j
+                      ? "bg-white/30 text-white"
+                      : "bg-gray-300 text-gray-800"
+                  )}
+                >
+                  {countByJenis(j)}
+                </span>
+              </div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Group List */}
-      <div className="grid gap-4">
+      {/* Group List → full width, no padding */}
+      <div className="space-y-2">
         {filteredGroups.map((g) => (
-          <Card
+          <a
             key={g.id}
-            className="hover:shadow-md transition-all rounded-lg bg-white"
+            href={g.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between px-3 py-3 
+                       bg-white shadow-sm hover:shadow-md hover:bg-indigo-50 
+                       transition-all group rounded-none"
           >
-            <CardContent className="flex items-center gap-4 p-3">
-              <Avatar className="w-8 h-8 shadow">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar className="w-8 h-8 border shadow">
                 <AvatarImage
                   src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
                   alt="WA"
                 />
                 <AvatarFallback>WA</AvatarFallback>
               </Avatar>
-              <a
-                href={g.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium hover:underline flex-1 truncate text-gray-800"
-              >
+              <span className="font-medium text-gray-800 text-sm sm:text-base truncate">
                 {g.nama}
-              </a>
-            </CardContent>
-          </Card>
+              </span>
+            </div>
+            <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 flex-shrink-0" />
+          </a>
         ))}
 
         {filteredGroups.length === 0 && (
