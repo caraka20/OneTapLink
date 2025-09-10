@@ -31,8 +31,12 @@ export default function AdminPage() {
     try {
       const token = localStorage.getItem("token")!;
       const res = await apiFetch<Group[]>("/groups", {}, token);
-      setGroups(res);
-      const jenisUnique = Array.from(new Set(res.map((g) => g.jenis)));
+
+      // sort ASC
+      const sorted = res.sort((a, b) => a.nama.localeCompare(b.nama));
+      setGroups(sorted);
+
+      const jenisUnique = Array.from(new Set(sorted.map((g) => g.jenis))).sort();
       setJenisTabs(["Semua", ...jenisUnique]);
     } catch (err) {
       console.error(err);
@@ -49,10 +53,12 @@ export default function AdminPage() {
   if (loading) return <p className="text-center text-gray-500">Loading data...</p>;
 
   const filteredGroups =
-    activeJenis === "Semua" ? groups : groups.filter((g) => g.jenis === activeJenis);
+    activeJenis === "Semua"
+      ? groups
+      : groups.filter((g) => g.jenis === activeJenis).sort((a, b) => a.nama.localeCompare(b.nama));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 p-3 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br p-4 from-slate-100 via-white to-slate-200">
       <div className="max-w-4xl mx-auto space-y-5">
         {/* Header */}
         <header className="text-center relative py-6">
@@ -109,28 +115,30 @@ export default function AdminPage() {
           </Button>
         </div>
 
-        {/* Filter Buttons */}
-        <div className="flex flex-wrap justify-center gap-2 bg-white shadow rounded-lg p-2 sm:p-3">
-          {jenisTabs.map((j) => (
-            <Button
-              key={j}
-              onClick={() => setActiveJenis(j)}
-              className={`px-4 py-2 text-sm sm:text-base rounded-full font-medium transition-all ${
-                activeJenis === j
-                  ? "bg-indigo-600 text-white shadow"
-                  : "bg-slate-100 text-gray-700 hover:bg-slate-200"
-              }`}
-            >
-              {j}
-              <span className="ml-1 text-xs opacity-70">
-                (
-                {j === "Semua"
-                  ? groups.length
-                  : groups.filter((g) => g.jenis === j).length}
-                )
-              </span>
-            </Button>
-          ))}
+        {/* Filter Buttons → 2 kolom */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="grid grid-cols-2 gap-2 p-2 sm:p-3">
+            {jenisTabs.map((j) => (
+              <Button
+                key={j}
+                onClick={() => setActiveJenis(j)}
+                className={`w-full px-4 py-3 text-sm sm:text-base rounded-xl font-medium transition-all ${
+                  activeJenis === j
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-slate-100 text-gray-700 hover:bg-slate-200"
+                }`}
+              >
+                {j}
+                <span className="ml-1 text-xs opacity-70">
+                  (
+                  {j === "Semua"
+                    ? groups.length
+                    : groups.filter((g) => g.jenis === j).length}
+                  )
+                </span>
+              </Button>
+            ))}
+          </div>
         </div>
 
         {/* Daftar Grup */}

@@ -24,8 +24,11 @@ export default function GroupList() {
   useEffect(() => {
     apiFetch<Group[]>("/groups")
       .then((res) => {
-        setGroups(res);
-        const jenisUnique = Array.from(new Set(res.map((g) => g.jenis)));
+        // urutkan ASC berdasarkan nama
+        const sorted = res.sort((a, b) => a.nama.localeCompare(b.nama));
+        setGroups(sorted);
+
+        const jenisUnique = Array.from(new Set(sorted.map((g) => g.jenis))).sort();
         setJenisTabs(["Semua", ...jenisUnique]);
       })
       .catch((err: unknown) => {
@@ -39,15 +42,20 @@ export default function GroupList() {
   if (error)
     return <p className="text-red-500 text-center">Error: {error}</p>;
 
-  const filteredGroups = groups.filter(
-    (g) =>
-      g.status === "AKTIF" &&
-      (activeJenis === "Semua" || g.jenis === activeJenis)
-  );
+  const filteredGroups = groups
+    .filter(
+      (g) =>
+        g.status === "AKTIF" &&
+        (activeJenis === "Semua" || g.jenis === activeJenis)
+    )
+    .sort((a, b) => a.nama.localeCompare(b.nama));
 
   const countByJenis = (jenis: string) => {
-    if (jenis === "Semua") return groups.filter((g) => g.status === "AKTIF").length;
-    return groups.filter((g) => g.status === "AKTIF" && g.jenis === jenis).length;
+    if (jenis === "Semua")
+      return groups.filter((g) => g.status === "AKTIF").length;
+    return groups.filter(
+      (g) => g.status === "AKTIF" && g.jenis === jenis
+    ).length;
   };
 
   return (
@@ -94,8 +102,8 @@ export default function GroupList() {
         </div>
       </div>
 
-      {/* Group List → full width, no padding */}
-      <div className="space-y-2">
+      {/* Group List → full width, elegan */}
+      <div className="space-y-2 px-2 sm:px-4">
         {filteredGroups.map((g) => (
           <a
             key={g.id}
@@ -103,8 +111,8 @@ export default function GroupList() {
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between px-3 py-3 
-                       bg-white shadow-sm hover:shadow-md hover:bg-indigo-50 
-                       transition-all group rounded-none"
+                       bg-white rounded-xl shadow-sm hover:shadow-md hover:bg-indigo-50 
+                       transition-all group"
           >
             <div className="flex items-center gap-3 min-w-0">
               <Avatar className="w-8 h-8 border shadow">

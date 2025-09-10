@@ -19,7 +19,7 @@ export default function Home() {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 drop-shadow-sm">
-          🎓 One Tap Link UT
+          🎓 GRUP UT OFFICIAL
         </h1>
         <p className="mt-4 text-lg text-gray-600 max-w-xl mx-auto">
           Semua grup WhatsApp Mahasiswa UT dalam satu tempat.
@@ -28,11 +28,11 @@ export default function Home() {
       </section>
 
       {/* Content Section */}
-      <section className="relative max-w-3xl mx-auto -mt-8 p-6">
+      {/* <section className="relative max-w-3xl mx-auto -mt-8 p-4"> */}
         <div className="rounded-2xl bg-white/70 backdrop-blur-md shadow-xl border border-white/40">
           <GroupList />
         </div>
-      </section>
+      {/* </section> */}
 
       {/* Footer */}
       <footer className="mt-16 text-center text-sm text-gray-500 pb-6">
